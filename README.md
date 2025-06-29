@@ -1,2 +1,2 @@
 # Прогноз погоды на JS
-## Ссылка: 
+## Ссылка: https://ulzirok.github.io/weather-forecast/
