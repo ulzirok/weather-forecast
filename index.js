@@ -2,50 +2,59 @@ const form = document.querySelector('.form');
 const input = document.querySelector('.input');
 const header = document.querySelector('.header');
 
-form.addEventListener('submit', (e) => {
+const apiKey = 'e9a5d3b74bf84418b11193028231901';
+
+function removeCard() {
+  const prevCard = document.querySelector('.card');
+  if (prevCard) {
+    prevCard.remove();
+  }
+}
+function showError(errorMessage) {
+  const errorHtml = `<div class="card">${errorMessage}</div>`;
+  header.insertAdjacentHTML('afterend', errorHtml);
+}
+function showCard({name, country, temp, condition1, condition2}) {
+  const cardHtml = `
+          <div class="card">
+            <h2 class="card-city">${name} <span>${country}</span></h2>
+            <div class="card-weather">
+              <div class="card-value">${temp}<sup>°c</sup></div>
+              <img src="${condition1}" alt="Weather" class="card-img">
+            </div>
+            <div class="card-desc">${condition2}</div>
+          </div>
+        `;
+  header.insertAdjacentHTML('afterend', cardHtml);
+}
+async function getWeather(city) {
+  const url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return data;
+}
+
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   let city = input.value.trim();
-  const apiKey = 'e9a5d3b74bf84418b11193028231901';
-  const url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}`;
+  const data = await getWeather(city)
 
-  fetch(url)
-    .then((response) => {
-      return response.json();
-    })
-    .then((data) => {
-
-      if (data.error) {
-        const prevCard = document.querySelector('.card');
-        
-        if (prevCard) {
-          prevCard.remove();
-        }
-        const errorHtml = `<div class="card">${data.error.message}</div>`;
-        header.insertAdjacentHTML('afterend', errorHtml);
-      }
-
-
-      else {
-        const prevCard = document.querySelector('.card');
-        
-        if (prevCard) {
-          prevCard.remove();
-        }
-
-        const cardHtml = `
-          <div class="card">
-            <h2 class="card-city">${data.location.name} <span>${data.location.country}</span></h2>
-            <div class="card-weather">
-              <div class="card-value">${data.current.temp_c}<sup>°c</sup></div>
-              <img src="${data.current.condition.icon}" alt="Weather" class="card-img">
-            </div>
-            <div class="card-desc">${data.current.condition.text}</div>
-          </div>
-        `;
-        header.insertAdjacentHTML('afterend', cardHtml);
-      }
-
-    });
+  if (data.error) {
+    removeCard();
+    showError(data.error.message);
+  }
+  else {
+    removeCard();
+    
+    const weatherData = {
+      name: data.location.name,
+      country: data.location.country,
+      temp: data.current.temp_c,
+      condition1: data.current.condition.icon,
+      condition2: data.current.condition.text
+    }
+    showCard(weatherData);
+  }
 
 });
